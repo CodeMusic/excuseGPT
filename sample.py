@@ -1,15 +1,27 @@
 import random
+import sys 
 
 prompt = "."
+promptOutput = ""
 
+import random
+def get_emotion_tag():
+    # random number with 5 posbilities which will map to ~NEUTRAL~, ~MAD~, ~SAD~, ~AFRAID~, or ~GLAD~
+    random_number = random.randint(0, 4)
+    emotion_tags = ['NEUTRAL', 'MAD', 'SAD', 'AFRAID', 'GLAD']
+    return f"~{emotion_tags[random_number]}~"
 
 def askCodeMusai(question = '.', system_message = '.', temperature = 0.9, useTokenEmbedding= True):
-    global prompt
+    global prompt, promptOutput
     prompt = question
-    return main()
+    mood = get_emotion_tag()
+    #if (prompt.startswith('.')):
+    prompt = question + "\n" + mood + "\n" #force specific prompt
+    promptOutput = f"Mood: {mood.replace('~', '').strip().title()}\nPrompt: {question}\n"
+    return main(mood)
 
-def main():
-    global prompt
+def main(inMood = ""):
+    global prompt, promptOutput
     """
     Sample from a trained model
     """
@@ -29,7 +41,11 @@ def main():
     else:
         out_dir = f'{out_dir}_token'
 
-    prompt = "."
+    #if prompt.startswith('.'):
+    #    prompt = get_emotion_tag()
+    #elif (inMood != ""):
+    prompt = inMood
+
     start = prompt # or "<|endoftext|>" or etc. Can also specify a file, use as: "FILE:prompt.txt"
     num_samples = 1 # number of samples to draw
     max_new_tokens = 100 # number of tokens generated in each sample
@@ -97,14 +113,18 @@ def main():
             start = f.read()
     start_ids = encode(start)
     x = (torch.tensor(start_ids, dtype=torch.long, device=device)[None, ...])
+ 
+    
+    print(f"start: {start}")
+    print(f"start_ids: {start_ids}") 
 
-    stopIdx = encode('.')[0]
+    stopIdx = encode('~')[0]
     print('\n---------------\n')
 
     temperature = 0.05
     tempIncrement = 0.05
     incrementTemp = True
-    randomTemp = False
+    randomTemp = True
     # run generation
     with torch.no_grad():
         with ctx:
@@ -129,16 +149,28 @@ def main():
 
                 #temperature = round(temperature, 2)
 
-                
+                print(f"{promptOutput}")
+                print("-----------------")
+                print(f"{prompt}")
                 y = model.generate(x, max_new_tokens, decode=decode, temperature=temperature, top_k=top_k, stopIdx=stopIdx)
                 out = decode(y[0].tolist()).replace('\n', '').replace('.', '') + '.'
-                thoughtVariabilityText = f"Thought Variability: {temperature:.2f}"
+                thoughtVariabilityText = f"({temperature:.2f})"
                 print(f"                   {thoughtVariabilityText}")
                 #print(out.strip())
                 #print('\n')
     
-    return f"{out}\n\n{thoughtVariabilityText}"
+    return f"{inMood}\n\n{out}\n\n{thoughtVariabilityText}"
 
 
 if __name__ == "__main__":
-    main()
+    #the arg I entered in the conmmand line after the file name did not get passed as an argument, why?
+    #I want to be able to pass in a mood as a command line argument and have it passed to the main function
+    #I can do this by adding a new argument to the command line
+    #I can do this by adding a new argument to the command line
+
+    args = sys.argv[1:]
+    if (len(args) > 0):
+        print(f"args: {args[0]}")
+        main("~" + args[0] + "~")
+    else:
+        main()

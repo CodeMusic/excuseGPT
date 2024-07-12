@@ -158,7 +158,6 @@ def get_lr(it):
     return min_lr + coeff * (learning_rate - min_lr)
 
 
-
 if __name__ == '__main__':
     # if not ddp, we are running on a single gpu, and one process
     master_process = True
