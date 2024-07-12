@@ -48,10 +48,9 @@ init_from = 'resume' # 'resume' or 'scratch' or 'gpt2*'
 useChar = False
 
 # data 
-dataset = 'excuse'
+dataset = 'chats'
 out_dir = 'trainedModelOut'
 if (useChar):
-    dataset = f'{dataset}_char'
     out_dir = f'{out_dir}_char'
 else:
     dataset = f'{dataset}_token'
@@ -70,7 +69,7 @@ dropout = 0.2 # for pretraining 0 is good, for finetuning try 0.1+
 bias = False # do we use bias inside LayerNorm and Linear layers?
 # adamw optimizer
 learning_rate = 6e-4 # max learning rate
-max_iters = 900000 # total number of training iterations
+max_iters = 990000 # total number of training iterations
 weight_decay = 1e-1
 beta1 = 0.80
 beta2 = 0.75
@@ -180,7 +179,7 @@ if __name__ == '__main__':
     ctx = nullcontext() if device_type == 'cpu' else torch.amp.autocast(device_type=device_type, dtype=ptdtype)
 
     # poor man's data loader
-    data_dir = os.path.join('data', dataset)
+    data_dir = os.path.join('chats', dataset)
     def get_batch(split):
         # We recreate np.memmap every batch to avoid a memory leak, as per
         # https://stackoverflow.com/questions/45132940/numpy-memmap-memory-usage-want-to-iterate-once/61472122#61472122
